@@ -1,9 +1,14 @@
 .PHONY: \
+	list \
 	emacs \
 	emacs_clean \
 	python3 \
 	python3_clean \
 	version
+
+list:
+	@ py/mk-list.py Makefile
+	@ ls -1 $$HOME/build
 
 emacs :
 	sh/co-emacs.sh
