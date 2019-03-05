@@ -4,7 +4,13 @@ export MS_DIR=~/gcp-ms-maierha
 
 PATH=$MS_DIR/py:~/local/bin:$PATH
 
-PS1='\u@xxxxxx ($ORACLE_SID) [\w]\n$ '
+host=$HOSTNAME
+
+if test ${#host} -gt 50; then
+    host=xxxxxx
+fi
+
+PS1='\u@$host ($ORACLE_SID) [\w]\n$ '
 
 export PYTHONPATH=$MS_DIR/py/lib
 
