@@ -11,3 +11,5 @@ yum install git
 # For python install
 yum install zlib-devel
 yum install libffi-devel
+
+yum update
