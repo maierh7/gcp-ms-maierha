@@ -1,7 +1,7 @@
 #! /bin/bash
 
 mkdir -p $HOME/build
-cd $HOME/build
+cd       $HOME/build
 git clone http://github.com/emacs-mirror/emacs
 cd emacs
 ./autogen.sh
