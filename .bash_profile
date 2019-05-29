@@ -2,7 +2,11 @@
 
 export MS_DIR=~/gcp-ms-maierha
 
-PATH=$MS_DIR/py:~/local/bin:$PATH
+export ORACLE_HOME=~/local/ora/instantclient_19_3
+
+PATH=$MS_DIR/py:~/local/bin:$ORACLE_HOME:$PATH
+
+export LD_LIBRARY_PATH=$ORACLE_HOME
 
 host=$HOSTNAME
 
