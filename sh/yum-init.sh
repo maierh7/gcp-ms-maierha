@@ -7,6 +7,7 @@ yum install ncurses-devel
 
 yum install gcc
 yum install git
+yum install unzip
 
 # For python install
 yum install zlib-devel
