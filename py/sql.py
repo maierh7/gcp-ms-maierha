@@ -3,6 +3,9 @@
 import opt
 import sub
 
+# sql.py --list
+# sql.py --list --back -inst <inst>
+
 opt.parser.add_option ("", "--list", default=False, action="store_true", dest="list")
 opt.parser.add_option ("", "--back", default=False, action="store_true", dest="back")
 opt.parser.add_option ("", "--inst", dest="inst")
