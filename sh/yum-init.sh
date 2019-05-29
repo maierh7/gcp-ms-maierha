@@ -13,4 +13,7 @@ yum install unzip
 yum install zlib-devel
 yum install libffi-devel
 
+# For Oracle instantclient
+yum install libaio
+
 yum update
