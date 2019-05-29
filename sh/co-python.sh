@@ -1,6 +1,7 @@
 #! /bin/bash
 
-cd $HOME/build
+mkdir -p $HOME/build
+cd       $HOME/build
 git clone http://github.com/python/cpython -b 3.7 python-3.7
 cd python-3.7
 ./configure --prefix=$HOME/local
