@@ -2,5 +2,5 @@
 
 import utc
 
-utc = UTC()
+utc = utc.UTC()
 print (utc.utc)
