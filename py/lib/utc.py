@@ -1,15 +1,13 @@
 
 from datetime import datetime as dt
-from datetime import date     as da
-from datetime import time     as ti
+from datetime import timezone as tz
 
 class UTC:
     utc = None
     
     def __init__ (self):
-        now = dt.now ().astimezone()
-        self.utc = now - now.utcoffset ()
-
+        self.utc = dt.now (tz.utc)
+        
     def date (self):
         return self.utc.date ()
     
