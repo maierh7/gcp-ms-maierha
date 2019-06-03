@@ -15,6 +15,7 @@ opt.parser.add_option ("", "--inst", dest="inst")
 opt.parser.add_option ("", "--list", default=False, action="store_true", dest="list")
 opt.parser.add_option ("", "--pids", default=False, action="store_true", dest="pids")
 opt.parser.add_option ("", "--keep", type="int", default=14, dest="keep")
+opt.parser.add_option ("", "--last", type="int", default=45, dest="last")
 
 (opts, args) = opt.GetOptions ()
 
@@ -61,7 +62,7 @@ def do_backup ():
     else:
         cur_last = blst[na][0]
         #print (nd.utc, cur_last + timedelta (minutes=60))
-        if nd.utc > cur_last + timedelta (minutes=60):
+        if nd.utc > cur_last + timedelta (minutes=opts.last):
             backup = True
     #print (backup)
     
