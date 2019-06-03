@@ -61,7 +61,7 @@ def do_backup ():
         backup = True
     else:
         cur_last = blst[na][0]
-        #print (nd.utc, cur_last + timedelta (minutes=60))
+        #print (nd.utc, cur_last + timedelta (minutes=opts.last))
         if nd.utc > cur_last + timedelta (minutes=opts.last):
             backup = True
     #print (backup)
