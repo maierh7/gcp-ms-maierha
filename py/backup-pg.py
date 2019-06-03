@@ -13,6 +13,7 @@ import utc
 
 opt.parser.add_option ("", "--inst", dest="inst")
 opt.parser.add_option ("", "--list", default=False, action="store_true", dest="list")
+opt.parser.add_option ("", "--pids", default=False, action="store_true", dest="pids")
 opt.parser.add_option ("", "--keep", type="int", default=14, dest="keep")
 
 (opts, args) = opt.GetOptions ()
@@ -59,10 +60,10 @@ def do_backup ():
         backup = True
     else:
         cur_last = blst[na][0]
-        print (nd.utc, cur_last + timedelta (minutes=60))
+        #print (nd.utc, cur_last + timedelta (minutes=60))
         if nd.utc > cur_last + timedelta (minutes=60):
             backup = True
-    print (backup)
+    #print (backup)
     
     if backup == True:
         res = subprocess.run ("gcloud sql backups create --instance=" + opts.inst, shell=True)
@@ -70,7 +71,27 @@ def do_backup ():
             sys.exit (1)
         else:
             get_backups ()
+        
+def delete_backup (id):
+    res = subprocess.run ("gcloud sql backups delete " + id + " --instance=" + opts.inst + " --quiet", shell=True)
+    if res.returncode != 0:
+        sys.exit ()
+        
+def keep_only_one_if_less_than_current ():
+    for i in blst:
+        if i < na:
+            for j in blst[i][1:]:
+                print (j, bids[j])
+                delete_backup (bids[j])
 
+def delete_old_backups ():
+    for i in blst:
+        if i < na - timedelta (days=14):
+            dt = blst[i][0]
+            id = bids[dt]
+            print (i, dt, id)
+            delete_backup (id)
+                
 def print_bids ():
     print ("IDs:")
     for i in sorted (bids, reverse=True):
@@ -83,9 +104,15 @@ if opts.inst is None:
 if opts.list == True:
     get_backups ()
     print_blst ()
-    sys.exit ()
 
+if opts.pids == True:
+    get_backups ()
+    print_bids ()
+
+if opts.list == True or opts.pids == True:
+    sys.exit ()
+    
 get_backups ()
 do_backup ()
-print_blst ()
-print_bids ()
+keep_only_one_if_less_than_current ()
+delete_old_backups ()
