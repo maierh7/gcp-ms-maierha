@@ -4,6 +4,7 @@ yum install emacs
 yum install autoconf
 yum install texinfo
 yum install ncurses-devel
+yum install gnutls-utils
 
 yum install gcc
 yum install git
