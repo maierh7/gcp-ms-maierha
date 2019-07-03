@@ -5,7 +5,7 @@ import sys
 import pprint
 
 import json
-from apiclient import discovery
+from googleapiclient import discovery
 from oauth2client.client import GoogleCredentials as client
 
 import opt

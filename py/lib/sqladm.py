@@ -1,7 +1,7 @@
 
 import json
 from pprint import pprint
-from apiclient import discovery
+from googleapiclient import discovery
 
 from datetime import date
 from datetime import time
