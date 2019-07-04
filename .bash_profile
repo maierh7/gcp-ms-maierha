@@ -32,4 +32,5 @@ if test -x "$MS_DIR/py/uniq_path.py"; then
 fi
 
 alias emacs="emacs -fg white -bg black"
+alias pl="proj.py --list mai"
 export EDITOR=emacs
