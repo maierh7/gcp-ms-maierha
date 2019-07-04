@@ -1,4 +1,6 @@
 
+import re
+import sys
 import json
 from pprint import pprint
 from googleapiclient import discovery
@@ -12,6 +14,8 @@ from datetime import datetime
 class SQLAdm:
     sqladm   = None
     project  = None
+    backend  = None
+    version  = None
     instance = None
     backups  = dict () # id [st, et, status]
 
@@ -20,14 +24,20 @@ class SQLAdm:
 
     now_dt   = None
     
+    opt_last = 45      # check for the last backup minutes back
+    opt_keep_hours = 24
+    opt_keep_days  = 14
+    
     def __init__ (self, project, instance, credentials):
         ndt = datetime.now (timezone.utc)
         self.now_dt = ndt.replace (microsecond=0)
         self.project = project
         self.instance = instance
         self.sqladm = discovery.build ("sqladmin", "v1beta4", credentials=credentials)
+        self.get_backups ()
 
     def get_backups (self):
+        self.get_db_type ()
         res = self.sqladm.backupRuns ().list (project=self.project, instance=self.instance).execute ()
         for bkp in res['items']:
             et = None
@@ -43,7 +53,7 @@ class SQLAdm:
                 self.blst[da] = list ()
             self.blst[da].append (dt)
             self.bids[dt] = i
-            
+        
     def print_backups (self):
         for i in self.backups:
             print (i, self.backups [i])
@@ -62,3 +72,59 @@ class SQLAdm:
         print ("IDs:")
         for i in sorted (self.bids, reverse=True):
             print (self.bids[i], i)
+
+    def print_version (self):
+        print (self.version, self.backend)
+        
+    def get_db_type (self):
+        res = self.sqladm.instances().list (project=self.project).execute ()
+        for i in res['items']:
+            name = None
+            back = None
+            vers = None
+            for j in i:
+                if j == "backendType":
+                    back = i['backendType']
+                if j == "databaseVersion":
+                    vers = i['databaseVersion']
+                if j == "name":
+                    name = i['name']
+            if name == self.instance:
+                self.version = vers
+                self.backend = back
+
+    def do_backup (self):
+        m = re.match ("^POSTGRES", self.version)
+        if m is None:
+            print ("Error: extented backup is only necessary for PostgreSQL", file=sys.stderr)
+            return
+        backup = False
+        if self.now_dt.date() not in self.blst:
+            backup = True
+        else:
+            cur_last = self.blst[self.now_dt.date()][0]
+            if self.now_dt > cur_last + timedelta (minutes=self.opt_last):
+                backup = True
+            
+        print (self.now_dt, backup)
+        if backup == True:
+            body = {}
+            res = self.sqladm.backupRuns ().insert (project=self.project, instance=self.instance, body=body).execute ()
+            for i in res:
+                print (i['status'], i['user'])
+                # process only the first record
+                break
+    
+    def delete_backup (self, bid):
+        res = self.sqladm.backupRuns ().delete (project=self.project, instance=self.instance, id=bid).execute ()
+        if len (res):
+            print (res['status'], res['user'])
+
+    def delete_backup_less_24 (self):
+        for i in sorted (self.blst, reverse=True)[1:]:
+            if len (self.blst[i]) > 1:
+                for j in self.blst[i][1:]:
+                    if j < self.now_dt - timedelta (hours=self.opt_keep_hours):
+                        print (j)
+                        self.delete_backup (self.bids[j])
+                    
