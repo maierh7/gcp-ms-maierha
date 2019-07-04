@@ -9,7 +9,7 @@ import sub
 opt.parser.add_option ("", "--list",  default=False, action="store_true", dest="list")
 opt.parser.add_option ("", "--stop",  default=False, action="store_true", dest="stop")
 opt.parser.add_option ("", "--start", default=False, action="store_true", dest="start")
-
+opt.parser.add_option ("", "--ssh",   dest="ssh")
 
 (opts, args) = opt.GetOptions ()
 lst = dict ()
@@ -55,3 +55,13 @@ if opts.stop == True:
     cmd = "gcloud compute instances stop " + host + " --zone=" + zone
     subprocess.run (cmd, shell=True)
 
+if opts.ssh:
+    cmd = "gcloud compute instances list"
+    out = subprocess.check_output (cmd, shell=True).decode ('utf-8')
+    lin = out.splitlines ()
+    flag = False
+    for i in lin:
+        if flag == True:
+            lst = re.split ("\s+", i)
+            print ("gcloud compute ssh " + lst[0] + " --zone " + lst[1])
+        flag = True
