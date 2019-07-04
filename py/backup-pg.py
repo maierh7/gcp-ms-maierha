@@ -8,7 +8,7 @@ from oauth2client.client import GoogleCredentials as client
 
 opt.parser.add_option ("", "--proj",  dest="proj")
 opt.parser.add_option ("", "--inst",  dest="inst")
-opt.parser.add_option ("", "--print", dest="print", default=True, action="store_true")
+opt.parser.add_option ("", "--print", dest="print", default=False, action="store_true")
 
 (opts, args) = opt.GetOptions ()
 
