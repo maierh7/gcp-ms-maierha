@@ -109,12 +109,9 @@ class SQLAdm:
         print (self.now_dt, backup)
         if backup == True:
             body = {}
-            res = self.sqladm.backupRuns ().insert (project=self.project, instance=self.instance, body=body).execute ()
-            for i in res:
-                print (i['status'], i['user'])
-                # process only the first record
-                break
-    
+            # Ignore result. Job is always pending.
+            self.sqladm.backupRuns ().insert (project=self.project, instance=self.instance, body=body).execute ()
+            
     def delete_backup (self, bid):
         res = self.sqladm.backupRuns ().delete (project=self.project, instance=self.instance, id=bid).execute ()
         if len (res):
