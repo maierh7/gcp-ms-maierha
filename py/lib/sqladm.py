@@ -25,8 +25,8 @@ class SQLAdm:
     now_dt   = None
     
     opt_last = 45      # check for the last backup minutes back
-    opt_keep_hours = 24
-    opt_keep_days  = 14
+    opt_keep_per_day = 10
+    opt_keep_days    = 14
     
     def __init__ (self, project, instance, credentials):
         ndt = datetime.now (timezone.utc)
@@ -38,12 +38,19 @@ class SQLAdm:
 
     def get_backups (self):
         self.get_db_type ()
-        res = self.sqladm.backupRuns ().list (project=self.project, instance=self.instance).execute ()
-        for bkp in res['items']:
-            et = None
-            if 'endTime' in bkp:
-                et = bkp['endTime']
-            self.backups [bkp['id']] = [bkp['startTime'], et, bkp['status']]
+        
+        req = self.sqladm.backupRuns().list (project=self.project, instance=self.instance)
+
+        while req is not None:
+            res = req.execute ()
+
+            for bkp in res['items']:
+                et = None
+                if 'endTime' in bkp:
+                    et = bkp['endTime']
+                    self.backups [bkp['id']] = [bkp['startTime'], et, bkp['status']]
+            req = self.sqladm.backupRuns().list_next (previous_request=req, previous_response=res)
+            
         # Build blst and bids
         for i in self.backups:
             dt = datetime.strptime (self.backups[i][0], "%Y-%m-%dT%H:%M:%S.%f%z")
@@ -117,11 +124,22 @@ class SQLAdm:
         if len (res):
             print (res['status'], res['user'])
 
-    def delete_backup_less_24 (self):
-        for i in sorted (self.blst, reverse=True)[1:]:
-            if len (self.blst[i]) > 1:
-                for j in self.blst[i][1:]:
-                    if j < self.now_dt - timedelta (hours=self.opt_keep_hours):
-                        print (j)
-                        self.delete_backup (self.bids[j])
-                    
+    def delete_old_backups (self):
+        cnt = 0
+        delete = False
+        for i in sorted (self.blst, reverse=True):
+            start_idx = 0
+            if i < self.now_dt.date ():
+                start_idx = 1
+            for j in self.blst[i][start_idx:]:
+                cnt += 1
+                print ("%2d %s %s %1d %s" % (cnt, i, j, start_idx, delete))
+                # keep at least one backup for days less than current
+                if delete == True:
+                    self.delete_backup (self.bids[j])
+                if cnt >= self.opt_keep_per_day:
+                    delete = True
+        for i in sorted (self.blst, reverse=True)[self.opt_keep_days:]:
+            print (i)
+            for j in self.blst[i]:
+                self.delete_backup (self.bids[j])
