@@ -69,7 +69,7 @@ class SQLAdm:
             print ()
             
     def print_bids (self):
-        print ("IDs:")
+        print ("IDs (%d):" % (len(self.bids)))
         for i in sorted (self.bids, reverse=True):
             print (self.bids[i], i)
 
