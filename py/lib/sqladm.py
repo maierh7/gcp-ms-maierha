@@ -1,6 +1,8 @@
 
 import re
 import sys
+import iso8601
+
 from googleapiclient import discovery
 
 # import json
@@ -47,12 +49,12 @@ class SQLAdm:
                 et = None
                 if 'endTime' in bkp:
                     et = bkp['endTime']
-                    self.backups [bkp['id']] = [bkp['startTime'], et, bkp['status']]
+                    self.backups [bkp['id']] = [bkp['windowStartTime'], bkp['startTime'], et, bkp['status']]
             req = self.sqladm.backupRuns().list_next (previous_request=req, previous_response=res)
             
         # Build blst and bids
         for i in self.backups:
-            dt = datetime.strptime (self.backups[i][0], "%Y-%m-%dT%H:%M:%S.%f%z")
+            dt = iso8601.parse_date (self.backups[i][0])
             da = dt.date ()
             #print (da, dt)
             if da not in self.blst:
