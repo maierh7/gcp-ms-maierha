@@ -37,11 +37,24 @@ func main() {
 	}
 
 	// Project ID of the project that contains the instance.
-	project := "v135-5256-playground-haraldmai"
+	project := "u1f3rwmxbxdt"
+	//project := "xbbcvpbxkziv"
+	//project := "v135-5256-playground-haraldmai"
 
 	// Cloud SQL instance ID. This does not include the project ID.
-	instance := "hm1-pg"
+	instance := "dev-europe-west4-b"
 
+	instances, err := sqladminService.Instances.List(project).Do()
+        if err != nil {
+                log.Fatal (err)
+        }
+	for _, elem := range instances.Items {
+		fmt.Printf ("%#v\n", elem)
+	}
+        fmt.Printf ("%#v\n", instances.Items)
+	return
+
+	
 	// The ID of this Backup Run.
 	id := int64(1562612402967)
 
