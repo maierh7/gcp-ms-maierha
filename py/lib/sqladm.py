@@ -41,9 +41,12 @@ class SQLAdm:
         self.get_db_type ()
         
         req = self.sqladm.backupRuns().list (project=self.project, instance=self.instance)
-
+        
         while req is not None:
             res = req.execute ()
+
+            if 'items' not in res:
+                continue
 
             for bkp in res['items']:
                 et = None
