@@ -140,7 +140,8 @@ class SQLAdm:
                     self.delete_backup (self.bids[j])
                 if cnt >= self.opt_keep_per_day:
                     delete = True
-        for i in sorted (self.blst, reverse=True)[self.opt_keep_days:]:
-            print (i)
+        for i in sorted (self.blst, reverse=True):
             for j in self.blst[i]:
-                self.delete_backup (self.bids[j])
+                if j + timedelta (days=self.opt_keep_days) < self.now_dt:
+                    print ("Delete Backup:" + str(j))
+                    self.delete_backup (self.bids[j])
