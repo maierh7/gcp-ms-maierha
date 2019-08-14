@@ -6,7 +6,7 @@ from optparse import OptionParser
 
 usage = sys.argv[0]
 m = re.search ("/?([^/]+)$", sys.argv[0])
-if m:    
+if m:
     usage = m.group (1) + " --serv <serv>"
 parser = OptionParser(usage=usage)
 
