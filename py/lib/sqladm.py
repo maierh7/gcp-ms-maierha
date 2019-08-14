@@ -54,7 +54,7 @@ class SQLAdm:
                     return
 
             if res is None:
-                print ("Error: wrong project (%s) or instance (%s)" %(self.project, self.instance), 
+                print ("Error: wrong project (%s) or instance (%s)" %(self.project, self.instance),
                        file=sys.stderr)
                 sys.exit (1)
                        
@@ -144,7 +144,7 @@ class SQLAdm:
             body = {}
             # Ignore result. Job is always pending.
             self.sqladm.backupRuns ().insert (project=self.project, instance=self.instance, body=body).execute ()
-            
+
     def delete_backup (self, bid):
         res = self.sqladm.backupRuns ().delete (project=self.project, instance=self.instance, id=bid).execute ()
         if len (res):
