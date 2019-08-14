@@ -4,6 +4,7 @@ import sys
 import iso8601
 
 from googleapiclient import discovery
+from googleapiclient.errors import HttpError
 
 # import json
 # from pprint import pprint
@@ -41,10 +42,22 @@ class SQLAdm:
         self.get_db_type ()
         
         req = self.sqladm.backupRuns().list (project=self.project, instance=self.instance)
-        
-        while req is not None:
-            res = req.execute ()
 
+        while req is not None:
+
+            res = None
+            try:
+                res = req.execute ()
+            except HttpError as err:
+                if err.resp.status in [429]:
+                    # No backups available
+                    return
+
+            if res is None:
+                print ("Error: wrong project (%s) or instance (%s)" %(self.project, self.instance), 
+                       file=sys.stderr)
+                sys.exit (1)
+                       
             if 'items' not in res:
                 continue
 
@@ -88,7 +101,16 @@ class SQLAdm:
         print (self.version, self.backend)
         
     def get_db_type (self):
-        res = self.sqladm.instances().list (project=self.project).execute ()
+        req = self.sqladm.instances().list (project=self.project)
+        
+        try:
+            res = req.execute ()
+        except HttpError as err:
+            if err.resp.status in [429]:
+                self.version = "POSTGRES_9_6"
+                self.backend = "SECOND_GEN"
+                return
+            
         for i in res['items']:
             name = None
             back = None
