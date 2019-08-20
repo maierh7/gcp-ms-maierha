@@ -65,7 +65,7 @@ class SQLAdm:
                 et = None
                 if 'endTime' in bkp:
                     et = bkp['endTime']
-                    self.backups [bkp['id']] = [bkp['windowStartTime'], bkp['startTime'], et, bkp['status']]
+                    self.backups [bkp['id']] = [bkp['windowStartTime'], bkp['startTime'], et, bkp['status'], bkp['type']]
             req = self.sqladm.backupRuns().list_next (previous_request=req, previous_response=res)
             
         # Build blst and bids
@@ -95,7 +95,9 @@ class SQLAdm:
     def print_bids (self):
         print ("IDs (%d):" % (len(self.bids)))
         for i in sorted (self.bids, reverse=True):
-            print (self.bids[i], i)
+            bck = self.backups[self.bids[i]]
+            type = bck[4]
+            print (self.bids[i], i, type)
 
     def print_version (self):
         print (self.version, self.backend)

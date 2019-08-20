@@ -9,7 +9,6 @@ import sqladm
 opt.parser.add_option ("", "--proj", dest="proj")
 opt.parser.add_option ("", "--inst", dest="inst")
 opt.parser.add_option ("", "--back", dest="back", default=False, action="store_true")
-opt.parser.add_option ("", "--del24", dest="del24", default = False, action="store_true")
 opt.parser.add_option ("", "--del",  dest="delete", type=int)
 
 (opts, args) = opt.GetOptions ()
@@ -27,8 +26,6 @@ if opts.back == True:
 elif opts.delete is not None:
     print ("delete:", opts.delete)
     sql.delete_backup (opts.delete)
-elif opts.del24 == True:
-    sql.delete_backup_less_24 ()
 else:
     sql.print_version ()
     sql.print_backups ()
