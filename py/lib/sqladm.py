@@ -5,6 +5,7 @@ import iso8601
 
 from googleapiclient import discovery
 from googleapiclient.errors import HttpError
+from google.cloud import storage
 
 # import json
 # from pprint import pprint
@@ -19,8 +20,8 @@ class SQLAdm:
     backend  = None
     version  = None
     instance = None
+    
     backups  = dict () # id [st, et, status]
-
     blst     = dict () # date [dt1, dt2, ...]
     bids     = dict () # dt [id1, id2, ...]
 
@@ -35,11 +36,15 @@ class SQLAdm:
         self.now_dt = ndt.replace (microsecond=0)
         self.project = project
         self.instance = instance
-        self.sqladm = discovery.build ("sqladmin", "v1beta4", credentials=credentials)
+        self.sqladm = discovery.build ("sqladmin", "v1beta4", credentials=credentials, cache_discovery=False)
         self.get_backups ()
 
     def get_backups (self):
         self.get_db_type ()
+
+        self.backups.clear ()
+        self.blst.clear ()
+        self.bids.clear ()
         
         req = self.sqladm.backupRuns().list (project=self.project, instance=self.instance)
 
@@ -65,7 +70,11 @@ class SQLAdm:
                 et = None
                 if 'endTime' in bkp:
                     et = bkp['endTime']
-                    self.backups [bkp['id']] = [bkp['windowStartTime'], bkp['startTime'], et, bkp['status'], bkp['type']]
+                    st = bkp['startTime']
+                    ty = bkp['type']
+                    if ty == 'AUTOMATED':
+                        continue
+                    self.backups [bkp['id']] = [st, bkp['windowStartTime'], et, bkp['status'], bkp['type']]
             req = self.sqladm.backupRuns().list_next (previous_request=req, previous_response=res)
             
         # Build blst and bids
@@ -172,3 +181,7 @@ class SQLAdm:
                 if j + timedelta (days=self.opt_keep_days) < self.now_dt:
                     print ("Delete Backup:" + str(j))
                     self.delete_backup (self.bids[j])
+
+    def export (self):
+        print (self.project, self.instance)
+        sto = storage.Client ()
