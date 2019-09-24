@@ -27,5 +27,5 @@ if opts.list:
 elif opts.delete:
     sql.delete_old_backups ()
 else:
-    sql.delete_old_backups ()
     sql.do_backup ()
+    sql.delete_old_backups ()
