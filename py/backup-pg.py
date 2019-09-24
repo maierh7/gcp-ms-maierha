@@ -2,7 +2,7 @@
 
 import sys
 import opt
-import sqladm
+from lib.sqladm import SQLAdm
 
 from oauth2client.client import GoogleCredentials as client
 
@@ -19,7 +19,7 @@ if opts.proj is None and opts.inst is None:
 
 cred = client.get_application_default()
 
-sql = sqladm.SQLAdm (opts.proj, opts.inst, cred)
+sql = SQLAdm (opts.proj, opts.inst, cred)
 
 if opts.list:
     sql.print_version ()
