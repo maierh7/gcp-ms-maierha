@@ -2,6 +2,7 @@
 import re
 import sys
 import iso8601
+import time
 
 from googleapiclient import discovery
 from googleapiclient.errors import HttpError
@@ -16,6 +17,7 @@ from datetime import datetime
 
 class SQLAdm:
     sqladm   = None
+    storage  = None
     project  = None
     backend  = None
     version  = None
@@ -25,9 +27,11 @@ class SQLAdm:
     blst     = dict () # date [dt1, dt2, ...]
     bids     = dict () # dt [id1, id2, ...]
 
+    dbs      = list ()
+    
     now_dt   = None
     
-    opt_last = 45      # check for the last backup minutes back
+    opt_last = 50      # check for the last backup minutes back
     opt_keep_per_day = 10
     opt_keep_days    = 14
     
@@ -182,6 +186,54 @@ class SQLAdm:
                     print ("Delete Backup:" + str(j))
                     self.delete_backup (self.bids[j])
 
+    def get_databases (self):
+        req = self.sqladm.databases().list (project=self.project, instance=self.instance)
+        res = req.execute ()
+        for i in res['items']:
+            self.dbs.append (i['name'])
+    
+    def file_exists (self, bucket, filename):
+        buck = self.storage.get_bucket (bucket)
+        blobs = self.storage.list_blobs (buck)
+        for i in blobs:
+            if i.name == filename:
+                return True
+        return False
+    
     def export (self):
-        print (self.project, self.instance)
-        sto = storage.Client ()
+        self.storage = storage.Client ()
+        print (self.project, self.instance, self.version)
+        body = {
+            "exportContext": {
+                "kind": "sql#exportContext",
+                "fileType": "SQL",
+                "uri": "",
+                "databases": [],
+            }
+        }
+        if self.version == "MYSQL_5_7":
+            bu = self.project + "-" + self.instance 
+            fn = str(self.now_dt.date ())
+            body["exportContext"]["uri"] = "gs://" + bu + "/" + fn 
+            print (body["exportContext"]["uri"])
+            req = self.sqladm.instances().export (project=self.project, instance=self.instance, body=body)
+            req.execute ()
+        else:
+            self.get_databases ()
+            for i in self.dbs:
+                bu = self.project + "-" + self.instance 
+                fn = str(self.now_dt.date ()) + "/" + i
+                if self.file_exists (bu,fn) == True:
+                    print (bu,fn, "file exists")
+                    continue
+                body["exportContext"]["uri"] = "gs://" + bu + "/" + fn 
+                # Only One Database just now possible
+                body["exportContext"]["databases"].clear ()
+                body["exportContext"]["databases"].append (i)
+                print (body["exportContext"]["uri"])
+                req = self.sqladm.instances().export (project=self.project, instance=self.instance, body=body)
+                req.execute ()
+            
+                while self.file_exists (bu, fn) is False:
+                    time.sleep (15)
+ 
