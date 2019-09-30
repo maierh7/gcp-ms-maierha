@@ -1,0 +1,7 @@
+mysql --ssl-ca   ~/.ssh/hm1-my-srv.pem \
+      --ssl-cert ~/.ssh/hm1-my-cli.pem \
+      --ssl-key  ~/.ssh/hm1-my-key.pem \
+      --host=35.204.21.242 \
+      --user root \
+      --password
+      
