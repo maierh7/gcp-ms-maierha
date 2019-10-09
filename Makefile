@@ -36,5 +36,5 @@ version:
 	@ mk-version.py $$HOME/local/go/bin/go
 	@ emacs-version.py
 	@ python3 --version
-	@ go version
+	@ go-version.py
 

@@ -1,10 +1,16 @@
 #! /usr/bin/env python
 
 import re
+import os
+import sys
+
 import opt
 import subprocess
 
 (opts, args) = opt.GetOptions ()
+
+if os.path.isdir (args[0]) is False:
+    sys.exit (0)
 
 out = subprocess.check_output (["ls", "-l", "--time-style=long-iso", args[0]]).decode ("utf-8")
 

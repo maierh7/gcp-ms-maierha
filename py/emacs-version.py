@@ -2,9 +2,25 @@
 
 import os
 import re
+import sys
 import subprocess
 
-proc = os.getenv ("HOME") + "/gcp-ms-maierha/sh/emacs-version.sh"
+def write_script (fn):
+    fp = open(fn, "w")
+
+    out = subprocess.check_output ("type -p ~/local/bin/emacs", shell=True).decode ("utf-8")
+    lin = out.splitlines ()
+    for i in lin:
+        print ("#! " + i + " --script", file=fp)
+
+    print ('(message "%s" (emacs-version))', file=fp)
+    
+    fp.close ()
+    os.chmod (fn, 0o755)
+
+proc = os.getenv ("HOME") + "/tmp/emacs-version.sh"
+
+write_script (proc)
 
 out = subprocess.check_output ([proc],
         stderr = subprocess.STDOUT).decode ('utf-8')
