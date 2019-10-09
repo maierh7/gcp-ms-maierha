@@ -34,4 +34,5 @@ fi
 
 alias emacs="emacs -fg white -bg black"
 alias pl="proj.py --list mai"
+alias ssh_add='eval `ssh-agent -s`; ssh-add'
 export EDITOR=emacs
