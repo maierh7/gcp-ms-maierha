@@ -5,10 +5,13 @@ import re
 import sys
 import subprocess
 
+home = os.getenv ("HOME")
+
 def write_script (fn):
     fp = open(fn, "w")
 
-    out = subprocess.check_output ("type -p ~/local/bin/emacs", shell=True).decode ("utf-8")
+    out = subprocess.check_output ("type -p " + home + "/local/bin/emacs", \
+                                   shell=True, executable="/bin/bash").decode ("utf-8")
     lin = out.splitlines ()
     for i in lin:
         print ("#! " + i + " --script", file=fp)
@@ -18,7 +21,7 @@ def write_script (fn):
     fp.close ()
     os.chmod (fn, 0o755)
 
-proc = os.getenv ("HOME") + "/tmp/emacs-version.sh"
+proc = home + "/tmp/emacs-version.sh"
 
 write_script (proc)
 
