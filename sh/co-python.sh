@@ -8,3 +8,4 @@ cd python-3.7
 make
 make install
 
+$HOME/local/bin/pip3 install -r $HOME/gcp-ms-maierha/py/py-req.txt
