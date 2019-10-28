@@ -1,3 +1,6 @@
+
+cloud_sql_proxy -instances=v135-5256-playground-haraldmai:europe-west4-a:hm1-my=tcp:3306 &
+
 mysql --ssl-ca   ~/.ssh/hm1-my-srv.pem \
       --ssl-cert ~/.ssh/hm1-my-cli.pem \
       --ssl-key  ~/.ssh/hm1-my-key.pem \
