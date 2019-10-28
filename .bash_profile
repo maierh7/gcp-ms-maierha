@@ -34,4 +34,6 @@ fi
 
 alias emacs="emacs -fg white -bg black"
 alias pl="proj.py --list mai"
+alias hm2-test='gcloud beta compute --project "v135-5256-playground-haraldmai" ssh --zone "europe-west4-a" "hm2-test"'
+
 export EDITOR=emacs
