@@ -1,0 +1,8 @@
+
+echo -n my-secret-password | \
+  gcloud kms encrypt \
+  --location global \
+  --keyring hm-key \
+  --key hm1 \
+  --plaintext-file - \
+  --ciphertext-file -

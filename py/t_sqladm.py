@@ -11,9 +11,12 @@ opt.parser.add_option ("", "--proj", dest="proj")
 opt.parser.add_option ("", "--inst", dest="inst")
 opt.parser.add_option ("", "--back", dest="back", default=False, action="store_true")
 opt.parser.add_option ("", "--del",  dest="delete", type=int)
-opt.parser.add_option ("", "--old",  dest="old", default=False, action="store_true")
-opt.parser.add_option ("", "--exp",  dest="exp", default=False, action="store_true")
-
+opt.parser.add_option ("", "--old",  dest="old",  default=False, action="store_true")
+opt.parser.add_option ("", "--exp",  dest="exp",  default=False, action="store_true")
+opt.parser.add_option ("", "--all",  dest="all",  default=False, action="store_true")
+opt.parser.add_option ("", "--full", dest="full", default=False, action="store_true")
+opt.parser.add_option ("", "--last", dest="last", default=False, action="store_true")
+opt.parser.add_option ("", "--rest", dest="rest" ) # backupID
 
 (opts, args) = opt.GetOptions ()
 
@@ -36,6 +39,15 @@ elif opts.old == True:
     sql.delete_old_backups ()
 elif opts.exp == True:
     sql.export ()
+elif opts.all:
+    sql.get_backups_all (opts.full)
+elif opts.rest is not None or opts.last == True:
+    do_restore = input("Do you really want to restore the database (N/Y)?")
+    if do_restore == 'Y':
+        if opts.last == True:
+            sql.restore_backup ()
+        if opts.rest is not None:
+            sql.restore_backup (opts.rest)
 else:
     sql.print_version ()
     sql.print_backups ()

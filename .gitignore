@@ -1,6 +1,6 @@
 *#
 *~
-*.pyc
+py/__pycache__/
+py/lib/__pycache__/
 py/.#sqladmin.py
-py/lib/__pycache__/*.pyc
 
