@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 import re
 import os
@@ -9,7 +9,7 @@ import subprocess
 
 (opts, args) = opt.GetOptions ()
 
-if os.path.isdir (args[0]) is False:
+if os.path.isfile (args[0]) is False:
     sys.exit (0)
 
 out = subprocess.check_output (["ls", "-l", "--time-style=long-iso", args[0]]).decode ("utf-8")
