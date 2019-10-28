@@ -17,8 +17,8 @@ out = subprocess.check_output (["ls", "-l", "--time-style=long-iso", args[0]]).d
 lines = out.splitlines ()
 
 for i in lines:
-    m = re.match ("^.*maierha [0-9]+ ", i)
+    m = re.search ("20[0-9]{2}", i)
     if m:
-        print (m.string [m.end():])
+        print (m.string [m.start():])
     else:
         print ("no match")
