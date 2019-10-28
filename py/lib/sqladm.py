@@ -90,7 +90,27 @@ class SQLAdm:
                 self.blst[da] = list ()
             self.blst[da].append (dt)
             self.bids[dt] = i
-        
+
+    def get_backups_all (self, full=False):
+        req = self.sqladm.backupRuns().list (project=self.project, instance=self.instance)
+        while req:
+            res = req.execute ()
+            for bkp in res['items']:
+                if full == True:
+                    print (bkp)
+                else:
+                    id     = bkp['id']
+                    start = ""
+                    if 'startTime' not in bkp:
+                        start = bkp['enqueuedTime']
+                    else:
+                        start  = bkp['startTime']
+                    status = bkp['status']
+                    type   = bkp['type']
+                    print ("%s %s %s %s" % (id, start, type, status))
+                    
+            req = self.sqladm.backupRuns().list_next (previous_request=req, previous_response=res)
+            
     def print_backups (self):
         for i in self.backups:
             print (i, self.backups [i])
@@ -110,7 +130,8 @@ class SQLAdm:
         for i in sorted (self.bids, reverse=True):
             bck = self.backups[self.bids[i]]
             type = bck[4]
-            print (self.bids[i], i, type)
+            stat = bck[3]
+            print (self.bids[i], i, type, stat)
 
     def print_version (self):
         print (self.version, self.backend)
@@ -236,4 +257,31 @@ class SQLAdm:
             
                 while self.file_exists (bu, fn) is False:
                     time.sleep (15)
- 
+
+    def restore_backup_req (self, bid):
+        restore = {
+            "restoreBackupContext" : {
+                "kind" : "sql#restoreBackupContext",
+                "backupRunId" : bid,
+                "project" : self.project,
+                "instanceId" : self.instance,                
+                }
+            }
+        req = self.sqladm.instances ().restoreBackup (project=self.project, instance=self.instance, body = restore)
+        res = req.execute ()
+        print ("Restroe request pending")
+
+    def restore_backup (self, bid=None):
+        restore_id = bid
+        for i in sorted (self.bids, reverse=True):
+            id   = self.bids[i]
+            if restore_id is None:
+                restore_id = id
+            bck  = self.backups[self.bids[i]]
+            st   = bck[0]
+            stat = bck[3]
+            if id == restore_id and stat == 'SUCCESSFUL':
+                print (id, st, stat)
+                self.restore_backup_req (id)
+                return
+        print ("Warning: Successful Backup for %d not found")
