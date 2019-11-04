@@ -3,13 +3,15 @@ import re
 import sys
 import iso8601
 import time
+import string
+import random
 
 from googleapiclient import discovery
 from googleapiclient.errors import HttpError
 from google.cloud import storage
 
 # import json
-# from pprint import pprint
+from pprint import pprint
 
 from datetime import timedelta
 from datetime import timezone
@@ -23,11 +25,11 @@ class SQLAdm:
     version  = None
     instance = None
     
-    backups  = dict () # id [st, et, status]
+    backups  = dict () # id [st, wt, et, status, type]
     blst     = dict () # date [dt1, dt2, ...]
     bids     = dict () # dt [id1, id2, ...]
 
-    dbs      = list ()
+    dbs      = list () # databases list
     
     now_dt   = None
     
@@ -36,6 +38,7 @@ class SQLAdm:
     opt_keep_days    = 14
     
     def __init__ (self, project, instance, credentials):
+        """Constructor."""
         ndt = datetime.now (timezone.utc)
         self.now_dt = ndt.replace (microsecond=0)
         self.project = project
@@ -43,7 +46,11 @@ class SQLAdm:
         self.sqladm = discovery.build ("sqladmin", "v1beta4", credentials=credentials, cache_discovery=False)
         self.get_backups ()
 
-    def get_backups (self):
+    def get_backups (self, all=False):
+        """Gets all the on-demand backups if all is false. If all
+        is true it gets also the automated backups. The first one is
+        used for On-demand backups the second one for recovery.
+"""
         self.get_db_type ()
 
         self.backups.clear ()
@@ -76,7 +83,7 @@ class SQLAdm:
                     et = bkp['endTime']
                     st = bkp['startTime']
                     ty = bkp['type']
-                    if ty == 'AUTOMATED':
+                    if all == False and ty == 'AUTOMATED':
                         continue
                     self.backups [bkp['id']] = [st, bkp['windowStartTime'], et, bkp['status'], bkp['type']]
             req = self.sqladm.backupRuns().list_next (previous_request=req, previous_response=res)
@@ -92,6 +99,8 @@ class SQLAdm:
             self.bids[dt] = i
 
     def get_backups_all (self, full=False):
+        """List all the backups - On-demand and automated backups.
+"""
         req = self.sqladm.backupRuns().list (project=self.project, instance=self.instance)
         while req:
             res = req.execute ()
@@ -99,23 +108,33 @@ class SQLAdm:
                 if full == True:
                     print (bkp)
                 else:
-                    id     = bkp['id']
+                    tid   = bkp['id']
                     start = ""
                     if 'startTime' not in bkp:
                         start = bkp['enqueuedTime']
                     else:
                         start  = bkp['startTime']
                     status = bkp['status']
-                    type   = bkp['type']
-                    print ("%s %s %s %s" % (id, start, type, status))
+                    ttyp   = bkp['type']
+                    print ("%s %s %s %s" % (tid, start, ttyp, status))
                     
             req = self.sqladm.backupRuns().list_next (previous_request=req, previous_response=res)
             
-    def print_backups (self):
+    def print_backups (self, all = False):
+        """This prints the backup dictionary.
+"""
+        if all == True:
+            self.get_backups (all)
         for i in self.backups:
             print (i, self.backups [i])
 
     def print_blst (self):
+        """Prints the backup list in a human readable manner:
+date9 : time1 time2 ...
+date8 : time1 time2 ...
+date7 : time1
+...
+"""
         print ("Now:")
         print (self.now_dt.date (), self.now_dt.time())
         print ("Backup-List")
@@ -126,12 +145,14 @@ class SQLAdm:
             print ()
             
     def print_bids (self):
+        """Prints the backup ids dictionary with the assigned date-times.
+"""
         print ("IDs (%d):" % (len(self.bids)))
         for i in sorted (self.bids, reverse=True):
             bck = self.backups[self.bids[i]]
-            type = bck[4]
+            ttyp = bck[4]
             stat = bck[3]
-            print (self.bids[i], i, type, stat)
+            print (self.bids[i], i, ttyp, stat)
 
     def print_version (self):
         print (self.version, self.backend)
@@ -163,6 +184,8 @@ class SQLAdm:
                 self.backend = back
 
     def do_backup (self):
+        """Execute the on-demand backup request.
+"""
         m = re.match ("^POSTGRES", self.version)
         if m is None:
             print ("Error: extented backup is only necessary for PostgreSQL", file=sys.stderr)
@@ -182,11 +205,15 @@ class SQLAdm:
             self.sqladm.backupRuns ().insert (project=self.project, instance=self.instance, body=body).execute ()
 
     def delete_backup (self, bid):
+        """Delete backup request.
+"""
         res = self.sqladm.backupRuns ().delete (project=self.project, instance=self.instance, id=bid).execute ()
         if len (res):
             print (res['status'], res['user'])
 
     def delete_old_backups (self):
+        """Delete old on-demand backups.
+"""
         cnt = 0
         delete = False
         for i in sorted (self.blst, reverse=True):
@@ -208,12 +235,16 @@ class SQLAdm:
                     self.delete_backup (self.bids[j])
 
     def get_databases (self):
+        """Get the databases into the self.dbs dictionary.
+"""
         req = self.sqladm.databases().list (project=self.project, instance=self.instance)
         res = req.execute ()
         for i in res['items']:
             self.dbs.append (i['name'])
     
     def file_exists (self, bucket, filename):
+        """Test if an filename exists in an storage buckett.
+"""
         buck = self.storage.get_bucket (bucket)
         blobs = self.storage.list_blobs (buck)
         for i in blobs:
@@ -222,6 +253,9 @@ class SQLAdm:
         return False
     
     def export (self):
+        """Export the instance to the storage bucket. The storage bucket
+        name should have the following format: project - instance_name
+"""
         self.storage = storage.Client ()
         print (self.project, self.instance, self.version)
         body = {
@@ -242,12 +276,12 @@ class SQLAdm:
         else:
             self.get_databases ()
             for i in self.dbs:
-                bu = self.project + "-" + self.instance 
+                bu = self.project + "-" + self.instance
                 fn = str(self.now_dt.date ()) + "/" + i
                 if self.file_exists (bu,fn) == True:
                     print (bu,fn, "file exists")
                     continue
-                body["exportContext"]["uri"] = "gs://" + bu + "/" + fn 
+                body["exportContext"]["uri"] = "gs://" + bu + "/" + fn
                 # Only One Database just now possible
                 body["exportContext"]["databases"].clear ()
                 body["exportContext"]["databases"].append (i)
@@ -258,30 +292,74 @@ class SQLAdm:
                 while self.file_exists (bu, fn) is False:
                     time.sleep (15)
 
-    def restore_backup_req (self, bid):
+    def restore_backup_req (self, bid, trg_project, trg_instance):
+        """Backup request
+"""
         restore = {
             "restoreBackupContext" : {
                 "kind" : "sql#restoreBackupContext",
                 "backupRunId" : bid,
                 "project" : self.project,
-                "instanceId" : self.instance,                
+                "instanceId" : self.instance,
                 }
             }
-        req = self.sqladm.instances ().restoreBackup (project=self.project, instance=self.instance, body = restore)
+        req = self.sqladm.instances ().restoreBackup (project=trg_project, instance=trg_instance, body = restore)
         res = req.execute ()
         print ("Restroe request pending")
 
-    def restore_backup (self, bid=None):
+    def restore_backup (self, bid=None, project=None, instance=None):
+        """Restore the instance with the given backup run Id. If Id is
+        none then use the last backup run.
+"""
+        trg_project  = self.project
+        trg_instance = self.instance
+        
+        if project is not None:
+            trg_project = project
+        if instance is not None:
+            trg_instance = instance
+            
         restore_id = bid
+        self.get_backups (all=True)
         for i in sorted (self.bids, reverse=True):
-            id   = self.bids[i]
+            tid  = self.bids[i]
             if restore_id is None:
-                restore_id = id
+                restore_id = tid
             bck  = self.backups[self.bids[i]]
             st   = bck[0]
             stat = bck[3]
-            if id == restore_id and stat == 'SUCCESSFUL':
-                print (id, st, stat)
-                self.restore_backup_req (id)
+            if tid == restore_id and stat == 'SUCCESSFUL':
+                print (tid, st, stat)
+                self.restore_backup_req (tid, project, instance)
                 return
         print ("Warning: Successful Backup for %d not found")
+
+    def get_instance (self):
+        req = self.sqladm.instances ().get(project=self.project, instance=self.instance)
+        res = req.execute ()
+        return res
+
+    def get_rand_postfix (self):
+        postfix = ''.join (random.choice(string.ascii_lowercase) for _ in range (4))
+        return postfix
+    
+    def create_instance (self, trg_project):
+        sbod = self.get_instance ()
+        name = self.instance + "-" + self.get_rand_postfix ()
+        body = {
+            "name" : name,
+            "backendType"     : sbod['backendType'],
+            "databaseVersion" : sbod['databaseVersion'],
+            "region"          : sbod['region'],
+            "settings": {
+                "tier": sbod ['settings'] ['tier'],
+                "locationPreference" : {
+                    "zone" : sbod['settings']['locationPreference']['zone']
+                    },
+                },
+            }
+        print (trg_project)
+        pprint (body)    
+        req = self.sqladm.instances().insert (project=trg_project, body=body)
+        res = req.execute ()
+        pprint (res)

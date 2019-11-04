@@ -18,6 +18,10 @@ opt.parser.add_option ("", "--full", dest="full", default=False, action="store_t
 opt.parser.add_option ("", "--last", dest="last", default=False, action="store_true")
 opt.parser.add_option ("", "--rest", dest="rest" ) # backupID
 
+opt.parser.add_option ("", "--trg_proj",  dest="trg_proj") # only new instance
+opt.parser.add_option ("", "--trg_inst",  dest="trg_inst") # restore dialog
+
+
 (opts, args) = opt.GetOptions ()
 
 if opts.proj is None and opts.inst is None:
@@ -41,6 +45,26 @@ elif opts.exp == True:
     sql.export ()
 elif opts.all:
     sql.get_backups_all (opts.full)
+elif opts.trg_proj and opts.trg_inst:
+    sql.get_backups (True)
+
+    dct = dict ()
+    
+    ind = 0
+    for i in sql.backups:
+        et = sql.backups [i] [2]
+        st = sql.backups [i] [3]
+        if st != "SUCCESSFUL":
+            continue
+        dct [ind] = i
+        print ("(%2d) %d %s %s" % (ind, int(i), et, st))
+        ind += 1
+    inp = input ("Index-Number: ")
+    bid = dct[int (inp)]
+    sql.restore_backup(bid, opts.trg_proj, opts.trg_inst)
+
+elif opts.trg_proj:
+    sql.create_instance (opts.trg_proj)
 elif opts.rest is not None or opts.last == True:
     do_restore = input("Do you really want to restore the database (N/Y)?")
     if do_restore == 'Y':
@@ -50,7 +74,7 @@ elif opts.rest is not None or opts.last == True:
             sql.restore_backup (opts.rest)
 else:
     sql.print_version ()
-    sql.print_backups ()
+    sql.print_backups (opts.full)
     sql.print_blst ()
     sql.print_bids ()
 
