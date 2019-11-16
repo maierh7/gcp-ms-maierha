@@ -35,7 +35,7 @@ class SQL:
                 if err.resp.status in [403]:
                     return SQL_Status.PERM
                 print (self.proj)
-                print ("HTTP-Error: ", err.resp.status)
+                print ("HTTP-Error (Inst-Count): ", err.resp.status)
                 sys.exit ()
                 
             if 'items' not in res:
@@ -61,13 +61,36 @@ class SQL:
             sama = i['serviceAccountEmailAddress']
             res [inst] = sama
         return res
-    
-    def get_backup_count (self, inst, cred):
-        adm = discovery.build ("sqladmin", "v1beta4", credentials=cred)
 
+    def get_dr (self):
+        res = dict ()
+        for i in self.items:
+            inst = i['name']
+            avai = 'ZONAL'
+            if 'availabilityType' in i['settings']:
+                avai = i['settings']['availabilityType']
+            auto = i['settings']['backupConfiguration']['enabled']
+            binl = False
+            if 'binaryLogEnabled' in i['settings']['backupConfiguration']:
+                binl = i['settings']['backupConfiguration']['binaryLogEnabled']
+            res [inst] = (avai, auto, binl)
+        return res
+
+    def get_size (self):
+        res = dict ()
+        for i in self.items:
+            inst = i['name']
+            dtyp = i['databaseVersion']
+            size = i['settings']['dataDiskSizeGb']
+            htyp = i['settings']['dataDiskType']
+            res [inst] = [dtyp, size, htyp]
+        return res
+    
+    def get_backup_count (self, inst):
         ind = 0
-        req = adm.backupRuns().list (project=self.proj, instance=inst)
+        req = self.sql.backupRuns().list (project=self.proj, instance=inst)
         while req:
+
             res = req.execute ()
 
             if "items" not in res:
@@ -75,6 +98,6 @@ class SQL:
 
             for i in res["items"]:
                 ind = ind + 1
-            req = adm.backupRuns().list_next (previous_request=req, previous_response=res)
+            req = self.sql.backupRuns().list_next (previous_request=req, previous_response=res)
         return ind
 

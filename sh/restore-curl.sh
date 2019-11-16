@@ -1,4 +1,4 @@
-
+#! /bin/bash
 
 # gcloud auth login
 ACCESS_TOKEN="$(gcloud auth print-access-token)"
@@ -13,4 +13,3 @@ curl   --header "Authorization: Bearer ${ACCESS_TOKEN}" \
                   }
                 }' \
        -X POST      https://www.googleapis.com/sql/v1beta4/projects/xbbcvpbxkziv/instances/hm1-pg-ysys/restoreBackup
-       

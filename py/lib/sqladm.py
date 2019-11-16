@@ -37,14 +37,14 @@ class SQLAdm:
     opt_keep_per_day = 10
     opt_keep_days    = 14
     
-    def __init__ (self, project, instance, credentials):
+    def __init__ (self, project, instance, credentials, all=False):
         """Constructor."""
         ndt = datetime.now (timezone.utc)
         self.now_dt = ndt.replace (microsecond=0)
         self.project = project
         self.instance = instance
         self.sqladm = discovery.build ("sqladmin", "v1beta4", credentials=credentials, cache_discovery=False)
-        self.get_backups ()
+        self.get_backups (all)
 
     def get_backups (self, all=False):
         """Gets all the on-demand backups if all is false. If all
