@@ -17,6 +17,11 @@ from datetime import timedelta
 from datetime import timezone
 from datetime import datetime
 
+def get_rand_postfix ():
+    postfix = ''.join (random.choice(string.ascii_lowercase) for _ in range (4))
+    return postfix
+
+
 class SQLAdm:
     sqladm   = None
     storage  = None
@@ -37,16 +42,16 @@ class SQLAdm:
     opt_keep_per_day = 10
     opt_keep_days    = 14
     
-    def __init__ (self, project, instance, credentials, all=False):
+    def __init__ (self, project, instance, credentials, all_backups=False):
         """Constructor."""
         ndt = datetime.now (timezone.utc)
         self.now_dt = ndt.replace (microsecond=0)
         self.project = project
         self.instance = instance
         self.sqladm = discovery.build ("sqladmin", "v1beta4", credentials=credentials, cache_discovery=False)
-        self.get_backups (all)
+        self.get_backups (all_backups)
 
-    def get_backups (self, all=False):
+    def get_backups (self, all_backups=False):
         """Gets all the on-demand backups if all is false. If all
         is true it gets also the automated backups. The first one is
         used for On-demand backups the second one for recovery.
@@ -83,7 +88,7 @@ class SQLAdm:
                     et = bkp['endTime']
                     st = bkp['startTime']
                     ty = bkp['type']
-                    if all == False and ty == 'AUTOMATED':
+                    if all_backups is False and ty == 'AUTOMATED':
                         continue
                     self.backups [bkp['id']] = [st, bkp['windowStartTime'], et, bkp['status'], bkp['type']]
             req = self.sqladm.backupRuns().list_next (previous_request=req, previous_response=res)
@@ -120,10 +125,10 @@ class SQLAdm:
                     
             req = self.sqladm.backupRuns().list_next (previous_request=req, previous_response=res)
             
-    def print_backups (self, all = False):
+    def print_backups (self, all_backups = False):
         """This prints the backup dictionary.
 """
-        if all == True:
+        if all_backups is True:
             self.get_backups (all)
         for i in self.backups:
             print (i, self.backups [i])
@@ -320,7 +325,7 @@ date7 : time1
             trg_instance = instance
             
         restore_id = bid
-        self.get_backups (all=True)
+        self.get_backups (all_backups=True)
         for i in sorted (self.bids, reverse=True):
             tid  = self.bids[i]
             if restore_id is None:
@@ -330,7 +335,7 @@ date7 : time1
             stat = bck[3]
             if tid == restore_id and stat == 'SUCCESSFUL':
                 print (tid, st, stat)
-                self.restore_backup_req (tid, project, instance)
+                self.restore_backup_req (tid, trg_project, trg_instance)
                 return
         print ("Warning: Successful Backup for %d not found")
 
@@ -338,14 +343,10 @@ date7 : time1
         req = self.sqladm.instances ().get(project=self.project, instance=self.instance)
         res = req.execute ()
         return res
-
-    def get_rand_postfix (self):
-        postfix = ''.join (random.choice(string.ascii_lowercase) for _ in range (4))
-        return postfix
     
     def create_instance (self, trg_project):
         sbod = self.get_instance ()
-        name = self.instance + "-" + self.get_rand_postfix ()
+        name = self.instance + "-" + get_rand_postfix ()
         body = {
             "name" : name,
             "backendType"     : sbod['backendType'],
@@ -359,7 +360,7 @@ date7 : time1
                 },
             }
         print (trg_project)
-        pprint (body)    
+        pprint (body)
         req = self.sqladm.instances().insert (project=trg_project, body=body)
         res = req.execute ()
         pprint (res)
