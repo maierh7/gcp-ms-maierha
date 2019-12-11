@@ -22,7 +22,7 @@ python3:
 	sh/co-python.sh
 
 python3_clean:
-	cd $$HOME/build; rm -rf python-3.7
+	cd $$HOME/build; rm -rf python-3.8
 
 go:
 	sh/co-go.sh
