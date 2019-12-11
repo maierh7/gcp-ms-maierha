@@ -1,5 +1,8 @@
 
+import re
 import sys
+
+from pprint import pprint
 from enum import Enum
 
 from oauth2client.client import GoogleCredentials as client    
@@ -10,6 +13,43 @@ class SQL_Status (Enum):
     LIST  = 0
     EMPTY = 1
     PERM  = 2
+
+def get_gb (sbytes):
+    val = int (sbytes)
+    if val == 0:
+        return 0
+    return val / (1024 * 1024 * 1024)
+
+def get_cpu_ram (tier):
+    tiers = {
+        "db-f1-micro"      :    0.600,
+        "db-g1-small"      :    1.700,
+        "db-n1-standard-1" :    3.750,
+        "db-n1-standard-2" :    7.500,
+        "db-n1-standard-4" :   15.000,
+        "db-n1-standard-8" :   30.000,
+        "db-n1-standard-16":  60.000,
+        "db-n1-standard-32": 120.000,
+        "db-n1-standard-64": 240.000,
+        "db-n1-highmem-2"  :   13.000,
+        "db-n1-highmem-4"  :   26.000,
+        "db-n1-highmem-8"  :   52.000,
+        "db-n1-highmem-16" :  104.000,
+        "db-n1-highmem-32" :  208.000,
+        "db-n1-highmem-64" :  416.000,
+    }
+    cpu = 0
+    ram = 0
+    if tier in tiers:
+        ram = tiers [tier]
+    m1 = re.match ("^db-n1-(?:standard|highmem)-([0-9]+)", tier)
+    if m1:
+        cpu = m1.group (1)
+    m2 = re.match ("^db-custom-([0-9]+)-([0-9]+)$", tier)
+    if m2:
+        cpu = m2.group (1)
+        ram = m2.group (2)
+    return (float (cpu), float (ram) / 1024)
 
 class SQL:
     
@@ -29,14 +69,14 @@ class SQL:
 
         req = self.sql.instances().list (project=self.proj)
         while req:
-            try:
-                res = req.execute ()
-            except HttpError as err:
-                if err.resp.status in [403]:
-                    return SQL_Status.PERM
-                print (self.proj)
-                print ("HTTP-Error (Inst-Count): ", err.resp.status)
-                sys.exit ()
+            # try:
+            res = req.execute ()
+            # except HttpError as err:
+            #     if err.resp.status in [403]:
+            #         return SQL_Status.PERM
+            #     print (self.proj)
+            #     print ("HTTP-Error (Inst-Count): ", err.resp.status)
+            #     sys.exit ()
                 
             if 'items' not in res:
                 # No SQL instances
@@ -89,9 +129,15 @@ class SQL:
     def get_backup_count (self, inst):
         ind = 0
         req = self.sql.backupRuns().list (project=self.proj, instance=inst)
+
         while req:
 
-            res = req.execute ()
+            try:
+                res = req.execute ()
+            except HttpError as err:
+                if err.resp.status in [429]:
+                    # No backups available
+                    return -1
 
             if "items" not in res:
                 continue
@@ -101,3 +147,7 @@ class SQL:
             req = self.sql.backupRuns().list_next (previous_request=req, previous_response=res)
         return ind
 
+    def get_all_tiers (self):
+        res = self.sql.tiers().list(project = self.proj).execute ()
+        for i in res ['items']:
+            print ("%7.3f %10.0f %s" % (get_gb (i['RAM']), get_gb(i['DiskQuota']),i['tier']))

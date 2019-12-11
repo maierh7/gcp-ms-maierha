@@ -1,11 +1,15 @@
 #! /usr/bin/env python3
 
 import sys
+from datetime import timedelta as td
+import iso8601
+
 from oauth2client.client import GoogleCredentials as client
 
 import opt
 from lib.sqladm import SQLAdm
 
+opt.parser.add_option ("", "--tim",  dest="tim", default=False, action="store_true")
 opt.parser.add_option ("", "--pid",  dest="pid", default=False, action="store_true")
 opt.parser.add_option ("", "--proj", dest="proj")
 opt.parser.add_option ("", "--inst", dest="inst")
@@ -32,16 +36,22 @@ cred = client.get_application_default()
 
 sql = SQLAdm (opts.proj, opts.inst, cred)
 
-if opts.back == True:
+if opts.back is True:
     sql.do_backup()
+elif opts.tim is True:
+    sql.get_backups (True)
+    for i in sql.backups:
+        st = iso8601.parse_date (sql.backups[i][0])
+        et = iso8601.parse_date (sql.backups[i][2])
+        print (i, et - st)
 elif opts.delete is not None:
     print ("delete:", opts.delete)
     sql.delete_backup (opts.delete)
-elif opts.pid == True:
+elif opts.pid is True:
     sql.print_bids ()
-elif opts.old == True:
+elif opts.old is True:
     sql.delete_old_backups ()
-elif opts.exp == True:
+elif opts.exp is True:
     sql.export ()
 elif opts.all:
     sql.get_backups_all (opts.full)
@@ -65,10 +75,10 @@ elif opts.trg_proj and opts.trg_inst:
 
 elif opts.trg_proj:
     sql.create_instance (opts.trg_proj)
-elif opts.rest is not None or opts.last == True:
+elif opts.rest is not None or opts.last is True:
     do_restore = input("Do you really want to restore the database (N/Y)?")
     if do_restore == 'Y':
-        if opts.last == True:
+        if opts.last is True:
             sql.restore_backup ()
         if opts.rest is not None:
             sql.restore_backup (opts.rest)

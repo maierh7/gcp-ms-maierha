@@ -108,7 +108,14 @@ class SQLAdm:
 """
         req = self.sqladm.backupRuns().list (project=self.project, instance=self.instance)
         while req:
-            res = req.execute ()
+
+            try:
+                res = req.execute ()
+            except HttpError as err:
+                if err.resp.status in [429]:
+                    # No backups available
+                    return
+            
             for bkp in res['items']:
                 if full == True:
                     print (bkp)
@@ -168,10 +175,18 @@ date7 : time1
         try:
             res = req.execute ()
         except HttpError as err:
+            print (err.resp.status)
             if err.resp.status in [429]:
                 self.version = "POSTGRES_9_6"
                 self.backend = "SECOND_GEN"
                 return
+        except:
+            print (sys.exc_info()[0])
+            return
+
+        if len (res) == 0:
+            print ("Error: no instnace", file=sys.stderr)
+            return
             
         for i in res['items']:
             name = None

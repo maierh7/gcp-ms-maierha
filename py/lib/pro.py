@@ -25,3 +25,9 @@ class Project:
 
     def get_id (self, name):
         return (self.plst[name])
+
+    def get_name (self, id):
+        for na, i in self.plst.items ():
+            if i == id:
+                return na
+        return None
