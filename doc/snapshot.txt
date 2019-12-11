@@ -1,0 +1,5 @@
+
+
+gcloud compute disks snapshot hm2-test disk-2 \
+  --snapshot-names hm2-test-20191211,disk-2-20191211 \
+  --zone europe-west4-a  

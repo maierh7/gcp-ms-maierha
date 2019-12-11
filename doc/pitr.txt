@@ -1,0 +1,10 @@
+
+
+mysqlbinlog \
+  -R \
+  -h 127.0.0.1 \
+  -u root \
+  -p \
+  --start-datetime="2019-10-28 17:00:00" \
+   --stop-datetime="2019-10-20 17:05:00" \ 
+  mysql-bin.000052 \
