@@ -1,0 +1,26 @@
+-*- org -*-
+
+** mssql-cli
+
+** Python
+
+*** CENTOS
+yum install gcc-g++
+yum install unixODBC unixODBC-devel
+yum install freetds-devel.x86_64
+
+*** Google Shell
+apt install unixodbc-dev
+apt install freetds-dev
+
+pip install pyodbc
+
+*** CENTOS /etc/odbcinst.ini
+[FreeTDS]
+Description = Freetds v1.1.20
+Driver = /lib64/libtdsodbc.so.0
+
+*** Google Shell: /etc/odbcinst.ini
+[FreeTDS]
+Description = Freetds v1.1.20
+Driver = /usr/lib/x86_64-linux-gnu/odbc/libtdsodbc.so
