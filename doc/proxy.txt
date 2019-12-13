@@ -1,0 +1,7 @@
+#! /bin/bash
+
+cloud_sql_proxy -instances=\
+v135-5256-playground-haraldmai:europe-west4:hm1-my=tcp:3306,\
+v135-5256-playground-haraldmai:europe-west1:hm1-sql=tcp:1433,\
+v135-5256-playground-haraldmai:europe-west4:hm1-pg=tcp:5432\
+&
