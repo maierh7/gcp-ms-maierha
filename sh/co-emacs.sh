@@ -2,9 +2,9 @@
 
 mkdir -p $HOME/build
 cd       $HOME/build
-git clone http://github.com/emacs-mirror/emacs
+git clone --depth 1 http://github.com/emacs-mirror/emacs
 cd emacs
 ./autogen.sh
-./configure --prefix=$HOME/local --without-makeinfo --with-gnutls=no
+./configure --prefix=$HOME/local
 make
 make install
