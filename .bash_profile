@@ -5,6 +5,7 @@ export MS_DIR=~/gcp-ms-maierha
 export ORACLE_HOME=~/local/ora/instantclient_19_3
 
 PATH=$MS_DIR/py:~/local/bin:$ORACLE_HOME:$PATH
+PATH=~/mh7/local_mh7/sh:$PATH
 PATH=~/local/go/bin:$PATH
 
 export LD_LIBRARY_PATH=$ORACLE_HOME

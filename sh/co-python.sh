@@ -2,8 +2,9 @@
 
 mkdir -p $HOME/build
 cd       $HOME/build
-git clone http://github.com/python/cpython -b 3.8 python-3.8
-cd python-3.8
+VER=3.9
+git clone http://github.com/python/cpython -b $VER python-${VER}
+cd python-${VER}
 ./configure --prefix=$HOME/local
 make
 make install
