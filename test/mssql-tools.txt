@@ -1,0 +1,4 @@
+
+### 
+curl https://packages.microsoft.com/config/rhel/8/prod.repo > /etc/yum.repos.d/msprod.repo
+dnf install mssql-tools unixODBC-devel
