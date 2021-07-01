@@ -12,7 +12,7 @@ export LD_LIBRARY_PATH=$ORACLE_HOME
 
 host=$HOSTNAME
 
-if test ${#host} -gt 50; then
+if test ${#host} -gt 30; then
     host=xxxxxx
 fi
 
@@ -34,6 +34,8 @@ if test -x "$MS_DIR/py/uniq_path.py"; then
 fi
 
 alias emacs="emacs -fg white -bg black"
+alias eterm="emacs -bg darkblue 2>/dev/null"
+alias ssh_add='eval `ssh-agent -s`;ssh-add ~/.ssh/id_rsa ~/.ssh/google_compute_engine'
 alias pl="proj.py --list mai"
 alias hm2-test='gcloud beta compute --project "v135-5256-playground-haraldmai" ssh --zone "europe-west4-a" "hm2-test"'
 alias csp="cloud_sql_proxy -instances=v135-5256-playground-haraldmai:europe-west4-a:hm1-my=tcp:3306 &"
