@@ -1,0 +1,7 @@
+
+Create new service account and add the cloud sql admin.
+
+Select "Manage Keys" and "Add Key"
+
+Store the JSON File to a local location and put it also to the places
+you want to access the database via CLOUD_SQL_PROXY
