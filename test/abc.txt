@@ -1,0 +1,7 @@
+create user abc with password = '34abc34_!;
+use abc;
+create user abc for login abc;
+
+EXEC sp_addrolemember N'db_datareader', N'abc';
+EXEC sp_addrolemember N'db_datawriter', N'abc';
+EXEC sp_droprolemember N'db_datareader', N'abc';
